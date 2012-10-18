@@ -11,15 +11,28 @@ Parser modules.
 from collections import defaultdict
 
 # : + ( x y -- x ) x y opplus
-def bb_plus(stack):
+def bb_plus(op, stack):
     last = stack.pop()
     blast = stack.pop()
     return stack + bb_stack(blast + last)
 
-def bb_minus(stack):
+def bb_minus(op, stack):
     last = stack.pop()
     blast = stack.pop()
     return stack + bb_stack(blast - last)
+
+def bb_times(op, stack):
+    last = stack.pop()
+    blast = stack.pop()
+    return stack + bb_stack(blast * last)
+
+def bb_pop(op, stack):
+    stack.pop()
+    return stack
+
+def bb_end(op, stack):
+    import sys
+    sys.exit(0)
 
 def tokens(text):
     """
@@ -52,11 +65,15 @@ def bb_read(prompt="Bb> "):
 
 def bb_stack(value): return [value]
 
-def identity(s): return s
+def identity(op, stack):
+    return stack + bb_stack(op)
 
 operator = defaultdict(lambda : identity)
 operator['+'] = bb_plus
 operator['-'] = bb_minus
+operator['*'] = bb_times
+operator['pop'] = bb_pop
+operator['end'] = bb_end
 
 def _eval(stack):
     if stack:
@@ -66,7 +83,7 @@ def _eval(stack):
                 print "Can't evaluate empty stack"
                 return stack
             op = stack.pop()
-            return operator[op](stack)
+            return operator[op](op, stack)
         else:
             return stack
     else:
@@ -83,7 +100,8 @@ def bb_print(result):
         print i, r
 
 def repl(prompt="Bb> "):
-    stack = []
+    stack = ['end']
+    bb_print(stack)
     while True:
         stack = bb_eval(stack, bb_read())
         bb_print(stack)
