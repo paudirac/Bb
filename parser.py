@@ -12,21 +12,23 @@ from collections import defaultdict
 
 # : + ( x y -- x ) x y opplus
 
-# TODO: those are not stack safe
-def bb_plus(op, stack):
-    last = stack.pop()
-    blast = stack.pop()
-    return stack + bb_stack(blast + last)
-
-def bb_minus(op, stack):
-    last = stack.pop()
-    blast = stack.pop()
-    return stack + bb_stack(blast - last)
-
-def bb_times(op, stack):
-    last = stack.pop()
-    blast = stack.pop()
-    return stack + bb_stack(blast * last)
+def make_binary(op, binary):
+    def bb_binary(op, blast, last):
+        return binary(blast, last)
+    def bb_op(op, stack):
+        last = stack.pop()
+        blast = stack.pop()
+        try:
+            new_stack = stack + bb_stack(bb_binary(op, blast, last))
+        except:
+            print("Error evaluating '%(op)s' in: " \
+                "%(blast)r %(last)r %(op)s" % locals())
+            print("Restoring stack")
+            new_stack = stack \
+                + bb_stack(blast) + bb_stack(last) \
+                + bb_stack(op)
+        return new_stack
+    return bb_op
 
 def bb_pop(op, stack):
     stack.pop()
@@ -72,9 +74,10 @@ def identity(op, stack):
     return stack + bb_stack(op)
 
 operator = defaultdict(lambda : identity)
-operator['+'] = bb_plus
-operator['-'] = bb_minus
-operator['*'] = bb_times
+operator['+'] = make_binary('+', lambda bl, l: bl + l)
+operator['-'] = make_binary('-', lambda bl, l: bl - l)
+operator['*'] = make_binary('*', lambda bl, l: bl * l)
+operator['/'] = make_binary('/', lambda bl, l: bl / l)
 operator['pop'] = bb_pop
 operator['end'] = bb_end
 
