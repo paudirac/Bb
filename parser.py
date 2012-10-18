@@ -11,6 +11,8 @@ Parser modules.
 from collections import defaultdict
 
 # : + ( x y -- x ) x y opplus
+
+# TODO: those are not stack safe
 def bb_plus(op, stack):
     last = stack.pop()
     blast = stack.pop()
@@ -44,6 +46,7 @@ def tokens(text):
     """
     return text.split(" ")
 
+# TODO: this should be value, not symbol
 def symbol(token):
     """
     >>> symbol("abracadabra")
@@ -80,8 +83,7 @@ def _eval(stack):
         if stack[len(stack) - 1] == '.':
             stack.pop() # pops .
             if not stack:
-                print "Can't evaluate empty stack"
-                return stack
+                raise "Can't evaluate empty stack"
             op = stack.pop()
             return operator[op](op, stack)
         else:
