@@ -17,6 +17,9 @@ def make_binary(op, binary):
         return binary(blast, last)
     def bb_op(op, stack):
         last = stack.pop()
+        # eval previous stack
+        stack = stack + bb_stack('.')
+        stack = _eval(stack)
         blast = stack.pop()
         try:
             new_stack = stack + bb_stack(bb_binary(op, blast, last))
